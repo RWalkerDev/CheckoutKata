@@ -21,5 +21,10 @@ namespace CheckoutKata
         {
             return _basket.Count;
         }
+
+        public decimal TotalCost()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

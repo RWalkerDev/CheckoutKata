@@ -31,5 +31,46 @@ namespace CheckoutKata.UnitTests
             var totalItems = checkout.TotalItems();
             Assert.Equal(1, totalItems);
         }
+
+        [Theory]
+        [InlineData("A", 10)]
+        [InlineData("B", 15)]
+        [InlineData("C", 40)]
+        [InlineData("D", 55)]
+        public void Given_an_item_have_been_added_to_the_basket_Then_the_total_cost_of_the_basket_should_be_calculated(
+            string item, decimal unitPrice)
+        {
+            //Arrange
+            var checkout = new Checkout();
+            checkout.Scan(item);
+
+            //Act
+            var totalCost = checkout.TotalCost();
+
+            //Assert
+            Assert.Equal(unitPrice, totalCost);
+        }
+
+        [Theory]
+        [InlineData("AA", 20)]
+        [InlineData("BB", 30)]
+        [InlineData("CC", 80)]
+        [InlineData("DD", 110)]
+        public void
+            Given_multiple_items_have_been_added_to_the_basket_Then_the_total_cost_of_the_basket_should_be_calculated(
+                string items, decimal expectedTotalCost)
+        {
+            //Arrange
+            var checkout = new Checkout();
+
+            foreach (var item in items)
+                checkout.Scan(item.ToString());
+
+            //Act
+            var actualTotalCost = checkout.TotalCost();
+
+            //Assert
+            Assert.Equal(expectedTotalCost, actualTotalCost);
+        }
     }
 }
