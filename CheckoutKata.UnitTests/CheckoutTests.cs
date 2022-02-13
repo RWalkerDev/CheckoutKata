@@ -17,10 +17,11 @@ namespace CheckoutKata.UnitTests
                 {"C", 40},
                 {"D", 55}
             };
-            
+
             _promotions = new List<Promotion>
             {
-                new("B", 3, 5)
+                new("B", 3, 5),
+                new("D", 2, (decimal) (110 * 0.25))
             };
         }
 
@@ -93,38 +94,44 @@ namespace CheckoutKata.UnitTests
             Assert.Equal(expectedTotalCost, actualTotalCost);
         }
 
-        [Fact]
-        public void
-            Given_I_have_added_3_lots_of_item_B_to_the_basket_Then_a_promotion_of_3_for_40_should_be_applied_to_the_total_cost()
+        [Theory]
+        [InlineData("BBB", 40)]
+        [InlineData("DD", 82.50)]
+        public void Given_I_have_added_enough_items_for_a_promotion_the_promotion_should_be_applied(string items,
+            decimal expectedTotal)
         {
             //Arrange
             var checkout = new Checkout(_stockKeepingUnits, _promotions);
 
             //Act
-            checkout.Scan("B");
-            checkout.Scan("B");
-            checkout.Scan("B");
-
-            //Assert
-            var totalCost = checkout.TotalCost();
-            Assert.Equal(40, totalCost);
-        }
-
-        [Fact]
-        public void For_every_3_lots_of_item_B_a_3_for_40_promotion_should_be_applied()
-        {
-            //Arrange
-            var checkout = new Checkout(_stockKeepingUnits, _promotions);
-
-            //Act
-            for (var i = 0; i < 6; i++)
+            foreach (var item in items)
             {
-                checkout.Scan("B");
+                checkout.Scan(item.ToString());
             }
 
             //Assert
-            var totalCost = checkout.TotalCost();
-            Assert.Equal(80, totalCost);
+            var actualTotalCost = checkout.TotalCost();
+            Assert.Equal(expectedTotal, actualTotalCost);
+        }
+        
+        [Theory]
+        [InlineData("BBBBBB", 80)]
+        [InlineData("DDDD", 165)]
+        public void A_promotion_should_be_applied_for_every_multiple_required_to_achieve_a_given_promotion(string items,
+            decimal expectedTotal)
+        {
+            //Arrange
+            var checkout = new Checkout(_stockKeepingUnits, _promotions);
+
+            //Act
+            foreach (var item in items)
+            {
+                checkout.Scan(item.ToString());
+            }
+
+            //Assert
+            var actualTotalCost = checkout.TotalCost();
+            Assert.Equal(expectedTotal, actualTotalCost);
         }
     }
 }
