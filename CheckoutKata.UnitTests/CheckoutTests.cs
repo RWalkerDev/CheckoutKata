@@ -1,14 +1,28 @@
-﻿using Xunit;
+﻿using System.Collections.Generic;
+using Xunit;
 
 namespace CheckoutKata.UnitTests
 {
     public class CheckoutTests
     {
+        private readonly Dictionary<string, decimal> _stockKeepingUnits;
+
+        public CheckoutTests()
+        {
+            _stockKeepingUnits = new Dictionary<string, decimal>
+            {
+                {"A", 10},
+                {"B", 15},
+                {"C", 40},
+                {"D", 55}
+            };
+        }
+
         [Fact]
         public void Given_there_are_no_items_in_the_basket_the_total_items_count_should_be_zero()
         {
             //Arrange
-            var checkout = new Checkout();
+            var checkout = new Checkout(_stockKeepingUnits);
 
             //Act
             var totalItems = checkout.TotalItems();
@@ -22,7 +36,7 @@ namespace CheckoutKata.UnitTests
         {
             //Arrange
             const string item = "A";
-            var checkout = new Checkout();
+            var checkout = new Checkout(_stockKeepingUnits);
 
             //Act
             checkout.Scan(item);
@@ -41,7 +55,7 @@ namespace CheckoutKata.UnitTests
             string item, decimal unitPrice)
         {
             //Arrange
-            var checkout = new Checkout();
+            var checkout = new Checkout(_stockKeepingUnits);
             checkout.Scan(item);
 
             //Act
@@ -61,7 +75,7 @@ namespace CheckoutKata.UnitTests
                 string items, decimal expectedTotalCost)
         {
             //Arrange
-            var checkout = new Checkout();
+            var checkout = new Checkout(_stockKeepingUnits);
 
             foreach (var item in items)
                 checkout.Scan(item.ToString());

@@ -6,10 +6,12 @@ namespace CheckoutKata
     public class Checkout
     {
         private readonly IList<string> _basket;
+        private readonly IDictionary<string, decimal> _stockKeepingUnits;
 
-        public Checkout()
+        public Checkout(IDictionary<string, decimal> stockKeepingUnits)
         {
             _basket = new List<string>();
+            _stockKeepingUnits = stockKeepingUnits;
         }
 
         public void Scan(string item)
@@ -24,15 +26,7 @@ namespace CheckoutKata
 
         public decimal TotalCost()
         {
-            var items = new Dictionary<string, decimal>
-            {
-                {"A", 10},
-                {"B", 15},
-                {"C", 40},
-                {"D", 55}
-            };
-
-            return _basket.Sum(i => items[i]);
+            return _basket.Sum(i => _stockKeepingUnits[i]);
         }
     }
 }
