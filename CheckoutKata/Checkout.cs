@@ -5,7 +5,7 @@ namespace CheckoutKata
 {
     public class Checkout
     {
-        private IEnumerable<string> _basket;
+        private readonly IList<string> _basket;
 
         public Checkout()
         {
@@ -14,12 +14,12 @@ namespace CheckoutKata
 
         public void Scan(string item)
         {
-            throw new System.NotImplementedException();
+            _basket.Add(item);
         }
 
         public int TotalItems()
         {
-            return _basket.Count();
+            return _basket.Count;
         }
     }
 }
