@@ -5,25 +5,18 @@ namespace CheckoutKata.UnitTests
 {
     public class CheckoutTests
     {
-        private readonly Dictionary<string, decimal> _stockKeepingUnits;
+        private readonly DictionaryStockKeepingUnitRepository _stockKeepingUnitRepository;
         private readonly PromotionsCalculator _promotionsCalculator;
 
         public CheckoutTests()
         {
-            _stockKeepingUnits = new Dictionary<string, decimal>
-            {
-                {"A", 10},
-                {"B", 15},
-                {"C", 40},
-                {"D", 55}
-            };
-
             var promotions = new List<Promotion>
             {
                 new("B", 3, 5),
                 new("D", 2, (decimal) (110 * 0.25))
             };
 
+            _stockKeepingUnitRepository = new DictionaryStockKeepingUnitRepository();
             _promotionsCalculator = new PromotionsCalculator(promotions);
         }
 
@@ -31,7 +24,7 @@ namespace CheckoutKata.UnitTests
         public void Given_there_are_no_items_in_the_basket_the_total_items_count_should_be_zero()
         {
             //Arrange
-            var checkout = new Checkout(_stockKeepingUnits, _promotionsCalculator);
+            var checkout = new Checkout(_stockKeepingUnitRepository, _promotionsCalculator);
 
             //Act
             var totalItems = checkout.TotalItems();
@@ -45,7 +38,7 @@ namespace CheckoutKata.UnitTests
         {
             //Arrange
             const string item = "A";
-            var checkout = new Checkout(_stockKeepingUnits, _promotionsCalculator);
+            var checkout = new Checkout(_stockKeepingUnitRepository, _promotionsCalculator);
 
             //Act
             checkout.Scan(item);
@@ -64,7 +57,7 @@ namespace CheckoutKata.UnitTests
             string item, decimal unitPrice)
         {
             //Arrange
-            var checkout = new Checkout(_stockKeepingUnits, new PromotionsCalculator(new List<Promotion>()));
+            var checkout = new Checkout(_stockKeepingUnitRepository, new PromotionsCalculator(new List<Promotion>()));
             checkout.Scan(item);
 
             //Act
@@ -84,7 +77,7 @@ namespace CheckoutKata.UnitTests
                 string items, decimal expectedTotalCost)
         {
             //Arrange
-            var checkout = new Checkout(_stockKeepingUnits, new PromotionsCalculator(new List<Promotion>()));
+            var checkout = new Checkout(_stockKeepingUnitRepository, new PromotionsCalculator(new List<Promotion>()));
 
             foreach (var item in items)
                 checkout.Scan(item.ToString());
@@ -103,7 +96,7 @@ namespace CheckoutKata.UnitTests
             decimal expectedTotal)
         {
             //Arrange
-            var checkout = new Checkout(_stockKeepingUnits, _promotionsCalculator);
+            var checkout = new Checkout(_stockKeepingUnitRepository, _promotionsCalculator);
 
             //Act
             foreach (var item in items)
@@ -123,7 +116,7 @@ namespace CheckoutKata.UnitTests
             decimal expectedTotal)
         {
             //Arrange
-            var checkout = new Checkout(_stockKeepingUnits, _promotionsCalculator);
+            var checkout = new Checkout(_stockKeepingUnitRepository, _promotionsCalculator);
 
             //Act
             foreach (var item in items)

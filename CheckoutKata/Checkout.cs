@@ -8,13 +8,13 @@ namespace CheckoutKata
     public class Checkout
     {
         private readonly IList<string> _basket;
-        private readonly IDictionary<string, decimal> _stockKeepingUnits;
+        private readonly IStockKeepingUnitRepository _stockKeepingUnitRepository;
         private readonly IPromotionsCalculator _promotionsCalculator;
 
-        public Checkout(IDictionary<string, decimal> stockKeepingUnits, IPromotionsCalculator promotionsCalculator)
+        public Checkout(IStockKeepingUnitRepository stockKeepingUnitRepository, IPromotionsCalculator promotionsCalculator)
         {
             _basket = new List<string>();
-            _stockKeepingUnits = stockKeepingUnits;
+            _stockKeepingUnitRepository = stockKeepingUnitRepository;
             _promotionsCalculator = promotionsCalculator;
         }
 
@@ -30,9 +30,11 @@ namespace CheckoutKata
 
         public decimal TotalCost()
         {
-            var totalCost = _basket.Sum(i => _stockKeepingUnits[i]);
-            var items = _basket.GroupBy(x => x).ToDictionary(item => item.Key, count => count.Count());
-            var discount = items.Sum(i => _promotionsCalculator.CalculateDiscount(i.Key, i.Value));
+            var allItems = _basket.Select(i => _stockKeepingUnitRepository.GetById(i));
+            var totalCost = allItems.Select(i => i.UnitPrice).Sum();
+
+            var allItemsGrouped = allItems.GroupBy(x => x.Id).ToDictionary(item => item.Key, count => count.Count());
+            var discount = allItemsGrouped.Sum(i => _promotionsCalculator.CalculateDiscount(i.Key, i.Value));
 
             return totalCost - discount;
         }
@@ -75,5 +77,39 @@ namespace CheckoutKata
             var timesToApplyDiscount = count / promotion.QuantityRequiredForPromotion;
             return promotion.Discount * timesToApplyDiscount;
         }
+    }
+
+    public interface IStockKeepingUnitRepository
+    {
+        StockKeepingUnit GetById(string id);
+    }
+    
+    public class DictionaryStockKeepingUnitRepository : IStockKeepingUnitRepository
+    {
+        private readonly Dictionary<string, StockKeepingUnit> _stockKeepingUnits =
+            new()
+            {
+                {"A", new StockKeepingUnit("A", 10)},
+                {"B", new StockKeepingUnit("B", 15)},
+                {"C", new StockKeepingUnit("C", 40)},
+                {"D", new StockKeepingUnit("D", 55)}
+            };
+
+        public StockKeepingUnit GetById(string id)
+        {
+            return _stockKeepingUnits[id];
+        }
+    }
+
+    public class StockKeepingUnit
+    {
+        public StockKeepingUnit(string id, decimal unitPrice)
+        {
+            Id = id;
+            UnitPrice = unitPrice;
+        }
+
+        public string Id { get; }
+        public decimal UnitPrice { get; }
     }
 }
