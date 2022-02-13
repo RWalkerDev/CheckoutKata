@@ -86,5 +86,38 @@ namespace CheckoutKata.UnitTests
             //Assert
             Assert.Equal(expectedTotalCost, actualTotalCost);
         }
+
+        [Fact]
+        public void Given_I_have_added_3_lots_of_item_B_to_the_basket_Then_a_promotion_of_3_for_40_should_be_applied_to_the_total_cost()
+        {
+            //Arrange
+            var checkout = new Checkout(_stockKeepingUnits);
+
+            //Act
+            checkout.Scan("B");
+            checkout.Scan("B");
+            checkout.Scan("B");
+
+            //Assert
+            var totalCost = checkout.TotalCost();
+            Assert.Equal(40, totalCost); 
+        }
+        
+        [Fact]
+        public void For_every_3_lots_of_item_B_a_3_for_40_promotion_should_be_applied()
+        {
+            //Arrange
+            var checkout = new Checkout(_stockKeepingUnits);
+
+            //Act
+            for (var i = 0; i < 6; i++)
+            {
+                checkout.Scan("B");
+            }
+
+            //Assert
+            var totalCost = checkout.TotalCost();
+            Assert.Equal(80, totalCost); 
+        }
     }
 }
