@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,13 +9,13 @@ namespace CheckoutKata
     {
         private readonly IList<string> _basket;
         private readonly IDictionary<string, decimal> _stockKeepingUnits;
-        private readonly IEnumerable<Promotion> _promotions;
+        private readonly IPromotionsCalculator _promotionsCalculator;
 
-        public Checkout(IDictionary<string, decimal> stockKeepingUnits, IEnumerable<Promotion> promotions)
+        public Checkout(IDictionary<string, decimal> stockKeepingUnits, IPromotionsCalculator promotionsCalculator)
         {
             _basket = new List<string>();
             _stockKeepingUnits = stockKeepingUnits;
-            _promotions = promotions;
+            _promotionsCalculator = promotionsCalculator;
         }
 
         public void Scan(string item)
@@ -30,14 +31,8 @@ namespace CheckoutKata
         public decimal TotalCost()
         {
             var totalCost = _basket.Sum(i => _stockKeepingUnits[i]);
-            decimal discount = 0;
-            foreach (var promotion in _promotions)
-            {
-                var items = _basket.Where(i => i == promotion.StockKeepingUnitId);
-
-                var timesToApplyDiscount = items.Count() / promotion.QuantityRequiredForPromotion;
-                discount += promotion.Discount * timesToApplyDiscount;
-            }
+            var items = _basket.GroupBy(x => x).ToDictionary(item => item.Key, count => count.Count());
+            var discount = items.Sum(i => _promotionsCalculator.CalculateDiscount(i.Key, i.Value));
 
             return totalCost - discount;
         }
@@ -48,13 +43,37 @@ namespace CheckoutKata
         public string StockKeepingUnitId { get; }
         public int QuantityRequiredForPromotion { get; }
         public decimal Discount { get; }
-        
+
         public Promotion(string stockKeepingUnitId, int quantityRequiredForPromotion, decimal discount)
         {
             StockKeepingUnitId = stockKeepingUnitId;
             QuantityRequiredForPromotion = quantityRequiredForPromotion;
             Discount = discount;
         }
+    }
 
+    public interface IPromotionsCalculator
+    {
+        decimal CalculateDiscount(string skuId, int count);
+    }
+
+    public class PromotionsCalculator : IPromotionsCalculator
+    {
+        private readonly IEnumerable<Promotion> _promotions;
+
+        public PromotionsCalculator(IEnumerable<Promotion> promotions)
+        {
+            _promotions = promotions ?? throw new ArgumentNullException(nameof(promotions));
+        }
+
+        public decimal CalculateDiscount(string skuId, int count)
+        {
+            var promotion = _promotions.FirstOrDefault(i => i?.StockKeepingUnitId == skuId);
+            if (promotion == null)
+                return 0;
+
+            var timesToApplyDiscount = count / promotion.QuantityRequiredForPromotion;
+            return promotion.Discount * timesToApplyDiscount;
+        }
     }
 }
