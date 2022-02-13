@@ -11,7 +11,8 @@ namespace CheckoutKata
         private readonly IStockKeepingUnitRepository _stockKeepingUnitRepository;
         private readonly IPromotionsCalculator _promotionsCalculator;
 
-        public Checkout(IStockKeepingUnitRepository stockKeepingUnitRepository, IPromotionsCalculator promotionsCalculator)
+        public Checkout(IStockKeepingUnitRepository stockKeepingUnitRepository,
+            IPromotionsCalculator promotionsCalculator)
         {
             _basket = new List<string>();
             _stockKeepingUnitRepository = stockKeepingUnitRepository;
@@ -32,9 +33,7 @@ namespace CheckoutKata
         {
             var allItems = _basket.Select(i => _stockKeepingUnitRepository.GetById(i));
             var totalCost = allItems.Select(i => i.UnitPrice).Sum();
-
-            var allItemsGrouped = allItems.GroupBy(x => x.Id).ToDictionary(item => item.Key, count => count.Count());
-            var discount = allItemsGrouped.Sum(i => _promotionsCalculator.CalculateDiscount(i.Key, i.Value));
+            var discount = _promotionsCalculator.CalculateDiscount(allItems);
 
             return totalCost - discount;
         }
@@ -56,7 +55,7 @@ namespace CheckoutKata
 
     public interface IPromotionsCalculator
     {
-        decimal CalculateDiscount(string skuId, int count);
+        decimal CalculateDiscount(IEnumerable<StockKeepingUnit> basketItems);
     }
 
     public class PromotionsCalculator : IPromotionsCalculator
@@ -68,14 +67,23 @@ namespace CheckoutKata
             _promotions = promotions ?? throw new ArgumentNullException(nameof(promotions));
         }
 
-        public decimal CalculateDiscount(string skuId, int count)
+        public decimal CalculateDiscount(IEnumerable<StockKeepingUnit> basketItems)
         {
-            var promotion = _promotions.FirstOrDefault(i => i?.StockKeepingUnitId == skuId);
-            if (promotion == null)
-                return 0;
+            var allItemsGrouped = basketItems.GroupBy(x => x.Id).ToDictionary(item => item.Key, count => count.Count());
 
-            var timesToApplyDiscount = count / promotion.QuantityRequiredForPromotion;
-            return promotion.Discount * timesToApplyDiscount;
+
+            return allItemsGrouped.Sum(i =>
+            {
+                var skuId = i.Key;
+                var count = i.Value;
+
+                var promotion = _promotions.FirstOrDefault(j => j.StockKeepingUnitId == skuId);
+                if (promotion == null)
+                    return 0;
+
+                var timesToApplyDiscount = count / promotion.QuantityRequiredForPromotion;
+                return promotion.Discount * timesToApplyDiscount;
+            });
         }
     }
 
@@ -83,7 +91,7 @@ namespace CheckoutKata
     {
         StockKeepingUnit GetById(string id);
     }
-    
+
     public class DictionaryStockKeepingUnitRepository : IStockKeepingUnitRepository
     {
         private readonly Dictionary<string, StockKeepingUnit> _stockKeepingUnits =
