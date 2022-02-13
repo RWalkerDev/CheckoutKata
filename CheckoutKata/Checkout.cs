@@ -26,7 +26,37 @@ namespace CheckoutKata
 
         public decimal TotalCost()
         {
-            return _basket.Sum(i => _stockKeepingUnits[i]);
+            var promotions = new List<Promotion>
+            {
+                new("B", 3, 5)
+            };
+
+            var totalCost = _basket.Sum(i => _stockKeepingUnits[i]);
+            decimal discount = 0;
+            foreach (var promotion in promotions)
+            {
+                var items = _basket.Where(i => i == promotion.StockKeepingUnitId);
+
+                var timesToApplyDiscount = items.Count() / promotion.QuantityRequiredForPromotion;
+                discount += promotion.Discount * timesToApplyDiscount;
+            }
+
+            return totalCost - discount;
         }
+    }
+
+    public class Promotion
+    {
+        public string StockKeepingUnitId { get; }
+        public int QuantityRequiredForPromotion { get; }
+        public decimal Discount { get; }
+        
+        public Promotion(string stockKeepingUnitId, int quantityRequiredForPromotion, decimal discount)
+        {
+            StockKeepingUnitId = stockKeepingUnitId;
+            QuantityRequiredForPromotion = quantityRequiredForPromotion;
+            Discount = discount;
+        }
+
     }
 }
