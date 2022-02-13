@@ -24,7 +24,15 @@ namespace CheckoutKata
 
         public decimal TotalCost()
         {
-            throw new System.NotImplementedException();
+            var items = new Dictionary<string, decimal>
+            {
+                {"A", 10},
+                {"B", 15},
+                {"C", 40},
+                {"D", 55}
+            };
+
+            return _basket.Sum(i => items[i]);
         }
     }
 }
