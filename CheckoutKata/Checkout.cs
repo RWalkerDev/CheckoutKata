@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CheckoutKata
@@ -7,11 +8,13 @@ namespace CheckoutKata
     {
         private readonly IList<string> _basket;
         private readonly IDictionary<string, decimal> _stockKeepingUnits;
+        private readonly IEnumerable<Promotion> _promotions;
 
-        public Checkout(IDictionary<string, decimal> stockKeepingUnits)
+        public Checkout(IDictionary<string, decimal> stockKeepingUnits, IEnumerable<Promotion> promotions)
         {
             _basket = new List<string>();
             _stockKeepingUnits = stockKeepingUnits;
+            _promotions = promotions;
         }
 
         public void Scan(string item)
@@ -26,14 +29,9 @@ namespace CheckoutKata
 
         public decimal TotalCost()
         {
-            var promotions = new List<Promotion>
-            {
-                new("B", 3, 5)
-            };
-
             var totalCost = _basket.Sum(i => _stockKeepingUnits[i]);
             decimal discount = 0;
-            foreach (var promotion in promotions)
+            foreach (var promotion in _promotions)
             {
                 var items = _basket.Where(i => i == promotion.StockKeepingUnitId);
 

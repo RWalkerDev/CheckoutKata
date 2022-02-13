@@ -6,6 +6,7 @@ namespace CheckoutKata.UnitTests
     public class CheckoutTests
     {
         private readonly Dictionary<string, decimal> _stockKeepingUnits;
+        private readonly IEnumerable<Promotion> _promotions;
 
         public CheckoutTests()
         {
@@ -16,13 +17,18 @@ namespace CheckoutKata.UnitTests
                 {"C", 40},
                 {"D", 55}
             };
+            
+            _promotions = new List<Promotion>
+            {
+                new("B", 3, 5)
+            };
         }
 
         [Fact]
         public void Given_there_are_no_items_in_the_basket_the_total_items_count_should_be_zero()
         {
             //Arrange
-            var checkout = new Checkout(_stockKeepingUnits);
+            var checkout = new Checkout(_stockKeepingUnits, _promotions);
 
             //Act
             var totalItems = checkout.TotalItems();
@@ -36,7 +42,7 @@ namespace CheckoutKata.UnitTests
         {
             //Arrange
             const string item = "A";
-            var checkout = new Checkout(_stockKeepingUnits);
+            var checkout = new Checkout(_stockKeepingUnits, _promotions);
 
             //Act
             checkout.Scan(item);
@@ -55,7 +61,7 @@ namespace CheckoutKata.UnitTests
             string item, decimal unitPrice)
         {
             //Arrange
-            var checkout = new Checkout(_stockKeepingUnits);
+            var checkout = new Checkout(_stockKeepingUnits, new List<Promotion>());
             checkout.Scan(item);
 
             //Act
@@ -75,7 +81,7 @@ namespace CheckoutKata.UnitTests
                 string items, decimal expectedTotalCost)
         {
             //Arrange
-            var checkout = new Checkout(_stockKeepingUnits);
+            var checkout = new Checkout(_stockKeepingUnits, new List<Promotion>());
 
             foreach (var item in items)
                 checkout.Scan(item.ToString());
@@ -88,10 +94,11 @@ namespace CheckoutKata.UnitTests
         }
 
         [Fact]
-        public void Given_I_have_added_3_lots_of_item_B_to_the_basket_Then_a_promotion_of_3_for_40_should_be_applied_to_the_total_cost()
+        public void
+            Given_I_have_added_3_lots_of_item_B_to_the_basket_Then_a_promotion_of_3_for_40_should_be_applied_to_the_total_cost()
         {
             //Arrange
-            var checkout = new Checkout(_stockKeepingUnits);
+            var checkout = new Checkout(_stockKeepingUnits, _promotions);
 
             //Act
             checkout.Scan("B");
@@ -100,14 +107,14 @@ namespace CheckoutKata.UnitTests
 
             //Assert
             var totalCost = checkout.TotalCost();
-            Assert.Equal(40, totalCost); 
+            Assert.Equal(40, totalCost);
         }
-        
+
         [Fact]
         public void For_every_3_lots_of_item_B_a_3_for_40_promotion_should_be_applied()
         {
             //Arrange
-            var checkout = new Checkout(_stockKeepingUnits);
+            var checkout = new Checkout(_stockKeepingUnits, _promotions);
 
             //Act
             for (var i = 0; i < 6; i++)
@@ -117,7 +124,7 @@ namespace CheckoutKata.UnitTests
 
             //Assert
             var totalCost = checkout.TotalCost();
-            Assert.Equal(80, totalCost); 
+            Assert.Equal(80, totalCost);
         }
     }
 }
